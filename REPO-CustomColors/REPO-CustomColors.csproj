@@ -89,6 +89,6 @@
     </ItemGroup>
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-      <Exec Command="xcopy /y &quot;$(TargetPath)&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\REPO\BepInEx\plugins&quot;" />
+      <Exec Command="xcopy /y &quot;$(TargetPath)&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\REPO\BepInEx\plugins&quot;&#xD;&#xA;xcopy /y &quot;$(TargetPath)&quot; &quot;../x753_REPO-CustomColors-X.X.X&quot;" />
     </Target>
 </Project>
