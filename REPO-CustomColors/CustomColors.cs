@@ -330,32 +330,20 @@ namespace CustomColors
                 if (setting == (DataDirector.Setting)753)
                 {
                     ModdedColorPlayerAvatar.LocalColor.r = value / 100f;
+                    return false;
                 }
                 if (setting == (DataDirector.Setting)754)
                 {
                     ModdedColorPlayerAvatar.LocalColor.g = value / 100f;
+                    return false;
                 }
                 if (setting == (DataDirector.Setting)755)
                 {
                     ModdedColorPlayerAvatar.LocalColor.b = value / 100f;
+                    return false;
                 }
 
                 return true;
-            }
-        }
-
-        [HarmonyPatch(typeof(DataDirector), "InitializeSettings")]
-        class DataDirector_InitializeSettings_Patch
-        {
-            static MethodInfo SettingAdd = typeof(DataDirector).GetMethod("SettingAdd", BindingFlags.NonPublic | BindingFlags.Instance);
-
-            [HarmonyPostfix]
-            public static void DataDirector_InitializeSettings_Postfix(DataDirector __instance)
-            {
-                // Potentially remove all this?
-                SettingAdd.Invoke(__instance, [DataDirector.SettingType.None, (DataDirector.Setting)753, "Modded_CustomColor_R", 50]);
-                SettingAdd.Invoke(__instance, [DataDirector.SettingType.None, (DataDirector.Setting)754, "Modded_CustomColor_G", 50]);
-                SettingAdd.Invoke(__instance, [DataDirector.SettingType.None, (DataDirector.Setting)755, "Modded_CustomColor_B", 50]);
             }
         }
     }
