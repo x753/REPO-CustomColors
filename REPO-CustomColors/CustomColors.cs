@@ -17,7 +17,7 @@ namespace CustomColors
     {
         private const string modGUID = "x753.CustomColors";
         private const string modName = "CustomColors";
-        private const string modVersion = "1.0.0";
+        private const string modVersion = "1.1.0";
 
         private readonly Harmony harmony = new Harmony(modGUID);
 
@@ -71,12 +71,6 @@ namespace CustomColors
             public PlayerAvatarVisuals visuals;
             public Material bodyMaterial;
 
-            static FieldInfo BodyMaterial = typeof(PlayerHealth).GetField("bodyMaterial", BindingFlags.NonPublic | BindingFlags.Instance);
-            static FieldInfo VisualsColor = typeof(PlayerAvatarVisuals).GetField("color", BindingFlags.NonPublic | BindingFlags.Instance);
-            static FieldInfo ColorSet = typeof(PlayerAvatarVisuals).GetField("colorSet", BindingFlags.NonPublic | BindingFlags.Instance);
-            static FieldInfo MenuPlayerListedList = typeof(MenuPageLobby).GetField("menuPlayerListedList", BindingFlags.NonPublic | BindingFlags.Instance);
-            static FieldInfo MenuPlayerListed_PlayerAvatar = typeof(MenuPlayerListed).GetField("playerAvatar", BindingFlags.NonPublic | BindingFlags.Instance);
-
             public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
             {
                 throw new NotImplementedException();
@@ -119,21 +113,21 @@ namespace CustomColors
                 Color color = new Color(r, g, b);
                 moddedColor = color;
 
-                VisualsColor.SetValue(visuals, color);
+                visuals.color = color;
 
                 if (bodyMaterial == null)
                 {
-                    bodyMaterial = (Material)BodyMaterial.GetValue(avatar.playerHealth);
+                    bodyMaterial = avatar.playerHealth.bodyMaterial;
                 }
 
                 bodyMaterial.SetColor(Shader.PropertyToID("_AlbedoColor"), color);
 
                 if (SemiFunc.RunIsLobbyMenu() && MenuPageLobby.instance)
                 {
-                    List<MenuPlayerListed> menuPlayerListedList = (List<MenuPlayerListed>)MenuPlayerListedList.GetValue(MenuPageLobby.instance);
+                    List<MenuPlayerListed> menuPlayerListedList = MenuPageLobby.instance.menuPlayerListedList;
                     foreach (MenuPlayerListed menuPlayerListed in menuPlayerListedList)
                     {
-                        if ((PlayerAvatar) MenuPlayerListed_PlayerAvatar.GetValue(menuPlayerListed) == avatar)
+                        if (menuPlayerListed.playerAvatar == avatar)
                         {
                             menuPlayerListed.playerHead.SetColor(color);
                             break;
@@ -141,7 +135,7 @@ namespace CustomColors
                     }
                 }
 
-                ColorSet.SetValue(visuals, true);
+                visuals.colorSet = true;
             }
         }
 
@@ -236,20 +230,19 @@ namespace CustomColors
             }
         }
 
-        //[HarmonyPatch(typeof(MenuButtonColor), "Start")]
-        //class MenuButtonColor_Start_Patch
-        //{
-        //    static FieldInfo ColorID = typeof(MenuButtonColor).GetField("colorID", BindingFlags.NonPublic | BindingFlags.Instance);
-
-        //    [HarmonyPostfix]
-        //    public static void MenuButtonColor_Start_Postfix(MenuButtonColor __instance)
-        //    {
-        //        if(DataDirector.instance.ColorGetBody() == (int)ColorID.GetValue(__instance))
-        //        {
-        //            // Move the selecter to it
-        //        }
-        //    }
-        //}
+        [HarmonyPatch(typeof(MenuButtonColor), "Start")]
+        class MenuButtonColor_Start_Patch
+        {
+            [HarmonyPostfix]
+            public static void MenuButtonColor_Start_Postfix(MenuButtonColor __instance)
+            {
+                if (DataDirector.instance.ColorGetBody() == __instance.colorID)
+                {
+                    MenuColorSelected menuColorSelected = __instance.menuPageColor.menuColorSelected;
+                    menuColorSelected.SetColor(AssetManager.instance.playerColors[__instance.colorID], __instance.transform.position - new Vector3(0f, 405f, 0f));
+                }
+            }
+        }
 
         [HarmonyPatch(typeof(PlayerAvatar), "PlayerAvatarSetColor")]
         class PlayerAvatar_PlayerAvatarSetColor_Patch
@@ -270,8 +263,6 @@ namespace CustomColors
         {
             public static Material bodyMaterial;
 
-            static FieldInfo BodyMaterial = typeof(PlayerHealth).GetField("bodyMaterial", BindingFlags.NonPublic | BindingFlags.Instance);
-
             [HarmonyPrefix]
             public static bool PlayerAvatarVisuals_MenuAvatarGetColorsFromRealAvatar_Prefix(PlayerAvatarVisuals __instance)
             {
@@ -280,7 +271,7 @@ namespace CustomColors
                     __instance.playerAvatar = PlayerAvatar.instance;
                 }
 
-                bodyMaterial = (Material)BodyMaterial.GetValue(__instance.transform.GetComponentInParent<PlayerHealth>());
+                bodyMaterial = __instance.transform.GetComponentInParent<PlayerHealth>().bodyMaterial;
                 bodyMaterial.SetColor(Shader.PropertyToID("_AlbedoColor"), ModdedColorPlayerAvatar.LocalColor);
 
                 return false;
